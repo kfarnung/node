@@ -431,6 +431,11 @@ void InspectorIo::Write(TransportAction action, int session_id,
                         const StringView& inspector_message) {
   if (state_ == State::kShutDown)
     return;
+
+  OutputDebugString("{\"type\":\"response\",\"payload\":");
+  OutputDebugStringW(reinterpret_cast<LPCWSTR>(inspector_message.characters16()));
+  OutputDebugString("},\r\n");
+
   AppendMessage(&outgoing_message_queue_, action, session_id,
                 StringBuffer::create(inspector_message));
   int err = uv_async_send(&thread_req_);
@@ -473,6 +478,11 @@ void InspectorIoDelegate::MessageReceived(int session_id,
       io_->ResumeStartup();
     }
   }
+
+  OutputDebugString("{\"type\":\"request\",\"payload\":");
+  OutputDebugString(message.c_str());
+  OutputDebugString("},\r\n");
+
   io_->PostIncomingMessage(InspectorAction::kSendMessage, session_id,
                            message);
 }
